@@ -15,7 +15,6 @@
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
-      </xsd:element>
       <xsd:element name="CreateProductResponse">
         <xsd:complexType>
           <xsd:sequence>
