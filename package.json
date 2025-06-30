@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/bigwihodari/soap#readme",
   "dependencies": {
+    "postgres": "^3.4.7",
     "soap": "^1.1.12"
   }
 }
