@@ -25,6 +25,19 @@
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
+      <xsd:element name="GetProductsResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element maxOccurs="unbounded" ref="Product" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Product">
+                <xsd:element name="id" type="xsd:string" />
+                <xsd:element name="name" type="xsd:string" />
+                <xsd:element name="about" type="xsd:string" />
+                <xsd:element name="price" type="xsd:string" />
+            </xsd:element>
     </xsd:schema>
   </types>
 
