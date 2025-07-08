@@ -23,6 +23,132 @@ const UserSchema = z.object({
     password: z.string(),
 });
 
+const UserResponseSchema = z.object({
+  user_name: z.string(),
+  email: z.string(),
+});
+
+//Salt (salage) ==> autre facon de faire. -> le plus recommandé.
+const crypto = require("crypto");
+function hashPassword(password) {
+  return crypto.createHash("sha512").update(password).digest("hex");
+}
+
+
+
+app.post("/users", async (req, res) => {
+  try {
+    const parsed = UserSchema.parse(req.body);
+    const { user_name, email, password } = parsed;
+
+    
+    const hashedPassword = hashPassword(password);
+
+    
+    const result = await sql`
+      INSERT INTO users (user_name, email, password)
+      VALUES (${user_name}, ${email}, ${hashedPassword})
+      RETURNING user_name, email
+    `;
+
+    const user = result[0];
+
+    const validatedUser = UserResponseSchema.parse({
+      ...user,
+      email: String(user.email), 
+    });
+
+    res.status(201).json(validatedUser);  
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put("/users/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const parsed = UserSchema.parse(req.body);
+    const { user_name, password } = parsed;
+
+    const hashedPassword = hashPassword(password);
+
+    const result = await sql`
+      UPDATE users
+      SET user_name = ${user_name}, password = ${hashedPassword}, email = ${email}
+      WHERE email = ${email}
+      RETURNING email, user_name
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+
+app.patch("/users/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const updates = req.body;
+
+    const UpdateUserSchema = z.object({
+      user_name: z.string().min(3).optional(),
+      password: z.string().min(6).optional(),
+    });
+    const parsedUpdates = UpdateUserSchema.parse(updates);
+
+    if (parsedUpdates.password) {
+      parsedUpdates.password = hashPassword(parsedUpdates.password);
+    }
+
+    const setFragments = [];
+
+    if (parsedUpdates.user_name !== undefined) {
+      setFragments.push(sql`user_name = ${parsedUpdates.user_name}`);
+    }
+    if (parsedUpdates.password !== undefined) {
+      setFragments.push(sql`password = ${parsedUpdates.password}`);
+    }
+
+    if (setFragments.length === 0) {
+      return res.status(400).json({ error: "Aucun champ à mettre à jour" });
+    }
+
+    // Construire la clause SET en concaténant manuellement
+    // Exemple : sql`UPDATE users SET `, sql`user_name = ...`, sql`, `, sql`password = ...`, etc.
+
+    let setClause = setFragments[0];
+    for (let i = 1; i < setFragments.length; i++) {
+      setClause = sql`${setClause}, ${setFragments[i]}`;
+    }
+
+    const query = sql`
+      UPDATE users
+      SET ${setClause}
+      WHERE email = ${email}
+      RETURNING email, user_name
+    `;
+
+    const result = await query;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -57,7 +183,6 @@ const CreateProductSchema = ProductSchema.omit({ id: true });
 app.post("/products", async (req, res) => {
   const result = await CreateProductSchema.safeParse(req.body);
  
-  // If Zod parsed successfully the request body
   if (result.success) {
     const { name, about, price } = result.data;
  
