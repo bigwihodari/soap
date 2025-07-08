@@ -8,7 +8,7 @@ const sql = postgres({ db: "mydb", user: "postgres", password: "admin" });
 
 app.use(express.json());
 
-// Schemas pour get
+// Schemas
 const ProductSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -16,6 +16,12 @@ const ProductSchema = z.object({
   price: z.number().positive(),
 });
 
+//user's schema
+const UserSchema = z.object({
+    email: z.string(),
+    user_name: z.string(),
+    password: z.string(),
+});
 
 
 app.get("/", (req, res) => {
