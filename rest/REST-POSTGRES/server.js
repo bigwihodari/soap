@@ -1,6 +1,9 @@
 const express = require("express");
 const postgres = require("postgres");
 const z = require("zod");
+//const fetch = require('node-fetch');
+// import fetch from 'node-fetch';
+
 
 const app = express();
 const port = 8000;
@@ -166,17 +169,17 @@ app.get("/products/:id", async (req, res) => {
   }
 });
 
-app.get("/products/", async (req, res) => {
+// app.get("/products/", async (req, res) => {
 
-    const result = await sql `SELECT id, name, about, price FROM products`;
+//     const result = await sql `SELECT id, name, about, price FROM products`;
 
-    const validatedProducts = result.map(product => {
-        return ProductSchema.parse(product);
-    });
+//     const validatedProducts = result.map(product => {
+//         return ProductSchema.parse(product);
+//     });
 
-    res.json(validatedProducts);
+//     res.json(validatedProducts);
 
-});
+// });
 
 const CreateProductSchema = ProductSchema.omit({ id: true });
  
@@ -210,6 +213,93 @@ app.delete("/products/:id", async (req, res) => {
   } else {
     res.status(404).send({ message: "Not found" });
   }
+});
+ 
+
+
+app.get('/f2p-games', async (req, res) => {
+  try {
+    const response = await fetch('https://www.freetogame.com/api/games', {
+      method: 'GET'
+    });
+
+    const data = await response.json();
+    res.json(data);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des données' });
+  }
+});
+
+
+// app.get('/f2p-games', async (req, res) => {
+//   try {
+//     const response = await fetch('https://www.freetogame.com/api/games', {
+//       method: 'GET'
+//     });
+
+//     const data = await response.json();
+//     res.json(data);
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Erreur lors de la récupération des données' });
+//   }
+// });
+
+app.get('/f2p-games/:id', async (req, res) => {
+  try {
+    const response = await fetch(`https://www.freetogame.com/api/game?id=${req.params.id}`, {
+      method: 'GET'
+    });
+
+    const data = await response.json();
+    res.json(data);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des données' });
+  }
+});
+
+
+
+app.get("/products", async (req, res) => {
+
+    const name_value = req.query.name;
+    const about_value = req.query.about;
+    const price_value = req.query.price;
+    
+    
+    if (name_value) {
+        const result = await sql `SELECT * FROM products WHERE name LIKE ${ '%' + name_value + '%'}`;
+        const validatedProducts = result.map(product => {
+            return ProductSchema.parse(product);
+        });
+        res.json(validatedProducts);
+    } else if (about_value) {
+        const result = await sql `SELECT * FROM products WHERE about LIKE ${ '%' + about_value + '%'}`;
+        const validatedProducts = result.map(product => {
+            return ProductSchema.parse(product);
+        });
+        res.json(validatedProducts);
+
+    } else if (price_value) {
+        const result = await sql `SELECT * FROM products WHERE price = ${price_value}`;
+        const validatedProducts = result.map(product => {
+            return ProductSchema.parse(product);
+        });
+        res.json(validatedProducts);
+
+    } else {
+        const result = await sql `SELECT id, name, about, price FROM products`;
+        const validatedProducts = result.map(product => {
+            return ProductSchema.parse(product);
+        });
+        res.json(validatedProducts);
+    }
+
 });
 
 
