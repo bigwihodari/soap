@@ -26,6 +26,21 @@ const UserSchema = z.object({
     password: z.string(),
 });
 
+//Order's schema
+// const OrderSchema = z.object({
+//   id: z.number(),
+//   user_email: z.string(),
+//   product_ids: z.number(),
+//   total: z.number(),
+//   payment: z.boolean(),
+//   created_at: z.date(),
+//   updated_at: z.date(),
+// });
+
+
+
+
+
 const UserResponseSchema = z.object({
   user_name: z.string(),
   email: z.string(),
@@ -123,8 +138,6 @@ app.patch("/users/:email", async (req, res) => {
       return res.status(400).json({ error: "Aucun champ à mettre à jour" });
     }
 
-    // Construire la clause SET en concaténant manuellement
-    // Exemple : sql`UPDATE users SET `, sql`user_name = ...`, sql`, `, sql`password = ...`, etc.
 
     let setClause = setFragments[0];
     for (let i = 1; i < setFragments.length; i++) {
